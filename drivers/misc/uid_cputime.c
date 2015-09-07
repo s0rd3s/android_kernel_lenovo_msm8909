@@ -38,8 +38,11 @@ struct uid_entry {
 	cputime_t stime;
 	cputime_t active_utime;
 	cputime_t active_stime;
+<<<<<<< HEAD
 	unsigned long long active_power;
 	unsigned long long power;
+=======
+>>>>>>> d0286be... proc: uid: Adds accounting for the cputimes per uid
 	struct hlist_node hash;
 };
 
@@ -75,7 +78,11 @@ static struct uid_entry *find_or_register_uid(uid_t uid)
 static int uid_stat_show(struct seq_file *m, void *v)
 {
 	struct uid_entry *uid_entry;
+<<<<<<< HEAD
 	struct task_struct *task, *temp;
+=======
+	struct task_struct *task;
+>>>>>>> d0286be... proc: uid: Adds accounting for the cputimes per uid
 	cputime_t utime;
 	cputime_t stime;
 	unsigned long bkt;
@@ -85,6 +92,7 @@ static int uid_stat_show(struct seq_file *m, void *v)
 	hash_for_each(hash_table, bkt, uid_entry, hash) {
 		uid_entry->active_stime = 0;
 		uid_entry->active_utime = 0;
+<<<<<<< HEAD
 		uid_entry->active_power = 0;
 	}
 
@@ -92,10 +100,18 @@ static int uid_stat_show(struct seq_file *m, void *v)
 	do_each_thread(temp, task) {
 		uid_entry = find_or_register_uid(from_kuid_munged(
 			current_user_ns(), task_uid(task)));
+=======
+	}
+
+	read_lock(&tasklist_lock);
+	for_each_process(task) {
+		uid_entry = find_or_register_uid(task_uid(task));
+>>>>>>> d0286be... proc: uid: Adds accounting for the cputimes per uid
 		if (!uid_entry) {
 			read_unlock(&tasklist_lock);
 			mutex_unlock(&uid_lock);
 			pr_err("%s: failed to find the uid_entry for uid %d\n",
+<<<<<<< HEAD
 				__func__, from_kuid_munged(current_user_ns(),
 				task_uid(task)));
 			return -ENOMEM;
@@ -110,6 +126,15 @@ static int uid_stat_show(struct seq_file *m, void *v)
 		uid_entry->active_stime += stime;
 		uid_entry->active_power += task->cpu_power;
 	} while_each_thread(temp, task);
+=======
+						__func__, task_uid(task));
+			return -ENOMEM;
+		}
+		task_cputime_adjusted(task, &utime, &stime);
+		uid_entry->active_utime += utime;
+		uid_entry->active_stime += stime;
+	}
+>>>>>>> d0286be... proc: uid: Adds accounting for the cputimes per uid
 	read_unlock(&tasklist_lock);
 
 	hash_for_each(hash_table, bkt, uid_entry, hash) {
@@ -117,6 +142,7 @@ static int uid_stat_show(struct seq_file *m, void *v)
 							uid_entry->active_utime;
 		cputime_t total_stime = uid_entry->stime +
 							uid_entry->active_stime;
+<<<<<<< HEAD
 		unsigned long long total_power = uid_entry->power +
 							uid_entry->active_power;
 		seq_printf(m, "%d: %llu %llu %llu\n", uid_entry->uid,
@@ -125,6 +151,11 @@ static int uid_stat_show(struct seq_file *m, void *v)
 			(unsigned long long)jiffies_to_msecs(
 				cputime_to_jiffies(total_stime)) * USEC_PER_MSEC,
 			total_power);
+=======
+		seq_printf(m, "%d: %u %u\n", uid_entry->uid,
+						cputime_to_usecs(total_utime),
+						cputime_to_usecs(total_stime));
+>>>>>>> d0286be... proc: uid: Adds accounting for the cputimes per uid
 	}
 
 	mutex_unlock(&uid_lock);
@@ -207,7 +238,11 @@ static int process_notifier(struct notifier_block *self,
 		return NOTIFY_OK;
 
 	mutex_lock(&uid_lock);
+<<<<<<< HEAD
 	uid = from_kuid_munged(current_user_ns(), task_uid(task));
+=======
+	uid = task_uid(task);
+>>>>>>> d0286be... proc: uid: Adds accounting for the cputimes per uid
 	uid_entry = find_or_register_uid(uid);
 	if (!uid_entry) {
 		pr_err("%s: failed to find uid %d\n", __func__, uid);
@@ -217,8 +252,11 @@ static int process_notifier(struct notifier_block *self,
 	task_cputime_adjusted(task, &utime, &stime);
 	uid_entry->utime += utime;
 	uid_entry->stime += stime;
+<<<<<<< HEAD
 	uid_entry->power += task->cpu_power;
 	task->cpu_power = ULLONG_MAX;
+=======
+>>>>>>> d0286be... proc: uid: Adds accounting for the cputimes per uid
 
 exit:
 	mutex_unlock(&uid_lock);
@@ -242,7 +280,11 @@ static int __init proc_uid_cputime_init(void)
 	proc_create_data("remove_uid_range", S_IWUGO, parent, &uid_remove_fops,
 					NULL);
 
+<<<<<<< HEAD
 	proc_create_data("show_uid_stat", S_IRUGO, parent, &uid_stat_fops,
+=======
+	proc_create_data("show_uid_stat", S_IWUGO, parent, &uid_stat_fops,
+>>>>>>> d0286be... proc: uid: Adds accounting for the cputimes per uid
 					NULL);
 
 	profile_event_register(PROFILE_TASK_EXIT, &process_notifier_block);
