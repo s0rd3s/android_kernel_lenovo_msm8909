@@ -69,6 +69,11 @@ typedef int (*radio_hci_request_func)(struct radio_hci_dev *hdev,
 		radio_hci_dev * hdev, unsigned long param),
 		unsigned long param, __u32 timeout);
 
+typedef int (*radio_hci_request_func)(struct radio_hci_dev *hdev,
+		int (*req)(struct
+		radio_hci_dev * hdev, unsigned long param),
+		unsigned long param, __u32 timeout);
+
 struct iris_device {
 	struct device *dev;
 	struct kfifo data_buf[IRIS_BUF_MAX];
